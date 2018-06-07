@@ -1,5 +1,6 @@
 #coding: utf-8
 import re
+
 def max_mount(zone_list):
     num_zone = []
     zone_dic = {'0':'0W～0.2W', '0.2':'0.2W～0.5W', '0.5':'0.5W～1W', '1':'1W～3W', '3':'3W～5W', '5':'5W～10W', '10':'10W以上'}
