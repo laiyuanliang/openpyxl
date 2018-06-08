@@ -7,14 +7,11 @@ import datetime,time
 import traceback
 
 sourcefile = u'/root/ms.xlsx' 
-outputfile = u'/root/msout-24.xlsx'  
-BackTracking_Month = 24
+outputfile = u'/root/msout.xlsx'  
 
 index = 1;
 
 wb = load_workbook(sourcefile)
-# sheet = wb[u'内部日志详情']
-# sheet = wb[u'工作表1']
 sheet = wb.active
 
 wbout = Workbook()
@@ -25,9 +22,37 @@ ws.cell(column=3, row=1).value = u"手机号"
 ws.cell(column=4, row=1).value = u"身份证号"
 ws.cell(column=5, row=1).value = u"创建时间"
 ws.cell(column=6, row=1).value = u"信贷平台注册详情(如有多条命中，以分号分隔)"
-ws.cell(column=7, row=1).value = u"贷款申请详情"
-ws.cell(column=8, row=1).value = u"贷款放款详情"
-ws.cell(column=9, row=1).value = u"贷款驳回详情"
+ws.cell(column=7, row=1).value = u"注册次数"
+ws.cell(column=8, row=1).value = u"注册次数（银行）"
+ws.cell(column=9, row=1).value = u"注册次数（非银行）"
+ws.cell(column=10, row=1).value = u"贷款申请详情"
+ws.cell(column=11, row=1).value = u"申请次数"
+ws.cell(column=12, row=1).value = u"申请次数（银行）"
+ws.cell(column=13, row=1).value = u"申请次数（非银行）"
+ws.cell(column=14, row=1).value = u"申请金额区间（0-0.2w）"
+ws.cell(column=15, row=1).value = u"申请金额区间(0.2-0.5w)"
+ws.cell(column=16, row=1).value = u"申请金额区间(0.5-1w)"
+ws.cell(column=17, row=1).value = u"申请金额区间(1-3w)"
+ws.cell(column=18, row=1).value = u"申请金额区间(3-5w)"
+ws.cell(column=19, row=1).value = u"申请金额区间(5-10w)"
+ws.cell(column=20, row=1).value = u"申请金额区间(10w以上)"
+ws.cell(column=21, row=1).value = u"最大申请金额区间"
+ws.cell(column=22, row=1).value = u"贷款放款详情"
+ws.cell(column=23, row=1).value = u"放款次数"
+ws.cell(column=24, row=1).value = u"放款次数(银行)"
+ws.cell(column=25, row=1).value = u"放款次数(非银行)"
+ws.cell(column=26, row=1).value = u"放款金额区间(0-0.2w)"
+ws.cell(column=27, row=1).value = u"放款金额区间(0.2-0.5w)"
+ws.cell(column=28, row=1).value = u"放款金额区间(0.5-1w)"
+ws.cell(column=29, row=1).value = u"放款金额区间(1-3w)"
+ws.cell(column=30, row=1).value = u"放款金额区间(3-5w)"
+ws.cell(column=31, row=1).value = u"放款金额区间(5-10w)"
+ws.cell(column=32, row=1).value = u"放款金额区间(10w以上)"
+ws.cell(column=33, row=1).value = u"最大放款金额区间"
+ws.cell(column=34, row=1).value = u"贷款驳回详情"
+ws.cell(column=35, row=1).value = u"驳回次数"
+ws.cell(column=36, row=1).value = u"驳回次数(银行)"
+ws.cell(column=37, row=1).value = u"驳回次数(非银行)"
 
 writeIndex = 2
 try:
@@ -38,119 +63,72 @@ try:
                 name = row[1].value
                 phoneNO = row[2].value
                 IDNO = row[3].value
-                EndTime = row[4].value
-                Platfrom_Info = row[6].value
-                Application_Info = row[7].value
-                Loans_Info = row[8].value
-                Reject_Info = row[9].value
+                ApplyTime = row[4].value
+                reg_info = row[5].value
+                app_info = row[6].value
+                loan_info = row[7].value
+                rej_info = row[8].value
 
-                # print EndTime
-                # print type(EndTime)
-                year = EndTime.year
-                month = EndTime.month
-                days = EndTime.day
-
-                year_delta = BackTracking_Month/12
-                month_delta = BackTracking_Month%12
-
-                cmonth = month - month_delta
-                # print '%d-%d-%d'%(year,cmonth, days)
-                if cmonth <= 0:
-                    cmonth = cmonth + 12
-                    year = year - 1
-
-                if cmonth == 2:
-                    if year % 100 == 0:
-                        if year % 400 == 0:
-                            if days > 29:
-                                days = 29
-                        else:
-                            if days > 28:
-                                days = 28
-                    else:
-                        if year % 4 == 0:
-                            if days > 29:
-                                days = 29
-                        else:
-                            if days > 28:
-                                days = 28
+                #注册统计
+                if reg_info != None:
+                    reg = len(re.findall(u'平台类型',reg_info))
+                    reg_Bank = len(re.findall(u'平台类型:银行',reg_info))
+                    reg_NoBank = len(re.findall(u'平台类型:非银行',reg_info))
                 else:
-                    if (cmonth == 4 or cmonth == 6 or cmonth == 9 or cmonth == 11) and days == 31:
-                        days = 30
+                    reg, reg_Bank, reg_NoBank = 0 
 
-                BeginTime = datetime.datetime(year=year-year_delta, month=cmonth, day=days)
-                # print BeginTime
-                # print EndTime
-                #Process Platfrom_Info
-                #平台类型:非银行,平台代码:EM21_102062,注册时间:2017/4/16 0:00:00;
-                outplatforminfo = []
-                if Platfrom_Info != None:
-                    Platfrom_Info_list = Platfrom_Info.split(';')
-                    for platform in Platfrom_Info_list:
-                        timeStr = platform.split(u'注册时间:')[-1]
-                        if timeStr != '':
-                            time_attribute = timeStr.split(' ')[0].split('-')
-                            #print time_attribute
-                            platformtime = datetime.datetime(int(time_attribute[0]),int(time_attribute[1]),int(time_attribute[2]))
-                            if BeginTime <= platformtime <= EndTime:
-                                outplatforminfo.append(platform)
+                #申请统计
+                if app_info != None:
+                    app = len(re.findall(u'平台类型', app_info))
+                    app_Bank = len(re.findall(u'平台类型:银行', app_info))
+                    app_NoBank = len(re.findall(u'平台类型:非银行', app_info))
+                    appMount_0t2k = len(re.findall(u'0W～0.2W', app_info))
+                    appMount_2t5k = len(re.findall(u'0.2W～0.5W', app_info))
+                    appMount_5t10k = len(re.findall(u'0.5W～1W', app_info))
+                    appMount_10t30k = len(re.findall(u'1W～3W', app_info))
+                    appMount_30t50k = len(re.findall(u'3W～5W', app_info))
+                    appMount_50t100k = len(re.findall(u'5W～10W', app_info))
+                    appMount_100kt = len(re.findall(u'10W以上', app_info))
 
-                #Process Application_Info
-                #平台类型:非银行,平台代码:EM21_101978,申请时间:2017/3/14 0:00:00,申请金额区间:0W～0.2W
-                outApplicationinfo = []
-                if Application_Info != None:
-                    Application_Info_list = Application_Info.split(';')
-                    for Application in Application_Info_list:
-                        timeStr = Application.split(u'申请时间:')[-1]
-                        if timeStr != '':
-                            time_attribute = timeStr.split(',')[0].split(' ')[0].split('-')
-                            Applicationtime = datetime.datetime(int(time_attribute[0]),int(time_attribute[1]),int(time_attribute[2]))
-                            if BeginTime <= Applicationtime <= EndTime:
-                                outApplicationinfo.append(Application)
+                    app_Mount = re.findall('\d*\.*\d*[W][～]\d*\.*\d*[W]|10W以上', app_info)
+                    max_app_zone = max_mount(app_Mount)
+                else:
+                    app, app_Bank, app_NoBank, appMount_0t2k, appMount_2t5k, appMount_5t10k, appMount_10t30k, appMount_30t50k,appMount_50t100k, appMount_100kt, max_app_zone = 0
 
-                #Process Loans_Info
-                #平台类型:非银行,平台代码:EM21_100047,放款时间:2016/9/24 0:00:00,放款金额区间:0W～0.2W;
-                outLoansinfo = []
-                if Loans_Info != None:
-                    Loans_Info_list = Loans_Info.split(';')
-                    for Loans in Loans_Info_list:
-                        timeStr = Loans.split(u'放款时间:')[-1]
-                        if timeStr != '':
-                            time_attribute = timeStr.split(',')[0].split(' ')[0].split('-')
-                            Loanstime = datetime.datetime(int(time_attribute[0]),int(time_attribute[1]),int(time_attribute[2]))
-                            if BeginTime <= Loanstime <= EndTime:
-                                outLoansinfo.append(Loans)
+                #放款统计
+                if loan_info != None:
+                    loan = len(re.findall(u'平台类型', loan_info))
+                    loan_Bank = len(re.findall(u'平台类型:银行', loan_info))
+                    loan_NoBank = len(re.findall(u'平台类型:非银行', loan_info))
+                    loanMount_0t2k = len(re.findall(u'0W～0.2W', loan_info))
+                    loanMount_2t5k = len(re.findall(u'0.2W～0.5W', loan_info))
+                    loanMount_5t10k = len(re.findall(u'0.5W～1W', loan_info))
+                    loanMount_10t30k = len(re.findall(u'1W～3W', loan_info))
+                    loanMount_30t50k = len(re.findall(u'3W～5W', loan_info))
+                    loanMount_50t100k = len(re.findall(u'5W～10W', loan_info))
+                    loanMount_100kt = len(re.findall(u'10W以上', loan_info))
 
-                # print len(outLoansinfo)
-                #Process Reject_Info
-                #平台类型:非银行,平台代码:EM21_100830,驳回时间:2016/3/18 0:00:00
-                outRejectinfo = []
-                if Reject_Info != None:
-                    Reject_Info_list = Reject_Info.split(';')
-                    for Reject in Reject_Info_list:
-                        timeStr = Reject.split(u'驳回时间:')[-1]
-                        if timeStr != '':
-                            time_attribute = timeStr.split(' ')[0].split('-')
-                            Rejecttime = datetime.datetime(int(time_attribute[0]),int(time_attribute[1]),int(time_attribute[2]))
-                            if BeginTime <= Rejecttime <= EndTime:
-                                outRejectinfo.append(Reject)
+                    loan_Mount = re.findall('\d*\.*\d*[W][～]\d*\.*\d*[W]|10W以上', loan_info)
+                    max_loan_zone = max_mount(loan_Mount)
+                else:
+                    loan, loan_Bank, loan_NoBank, loanMount_0t2k, loanMount_2t5k, loanMount_5t10k, loanMount_10t30k, loanMount_30t50k, loanMount_50t100k, loanMount_100kt, max_loan_zone = 0
 
-                #Process
-                # print Platfrom_Info
-                # print Application_Info
-                # print Loans_Info
+                #驳回统计
+                if reg_info != None:
+                    rej = len(re.findall(u'平台类型',rej_info))
+                    rej_Bank = len(re.findall(u'平台类型:银行',rej_info))
+                    rej_NoBank = len(re.findall(u'平台类型:非银行',rej_info))
+                else:
+                    rej, rej_Bank, reg_NoBank = 0
+
+
+
                 #Write File
-                if len(outplatforminfo) > 0 or len(outApplicationinfo) > 0 or len(outLoansinfo) > 0 or len(outRejectinfo) > 0:
-                    # print 'write file'
                     ws.cell(column=1, row=writeIndex).value = serialNO
                     ws.cell(column=2, row=writeIndex).value = name
                     ws.cell(column=3, row=writeIndex).value = phoneNO
                     ws.cell(column=4, row=writeIndex).value = IDNO
-                    ws.cell(column=5, row=writeIndex).value = EndTime
-
-                    platformStr = ''
-                    for platform in outplatforminfo:
-                        platformStr = platform + '' + platformStr
+                    ws.cell(column=5, row=writeIndex).value = ApplyTime
                     ws.cell(column=6, row=writeIndex).value = platformStr
 
                     ApplicationStr = ''
@@ -182,3 +160,60 @@ except Exception , e:
     print u"在第%d行出错"%(index)
 finally:
     wbout.save(outputfile)
+#coding: utf-8
+import re
+
+def max_mount(zone_list):
+    num_zone = []
+    zone_dic = {'0':'0W～0.2W', '0.2':'0.2W～0.5W', '0.5':'0.5W～1W', '1':'1W～3W', '3':'3W～5W', '5':'5W～10W', '10':'10W以上'}
+    for zone in zone_list:
+        num = zone.split('W')[0]
+        num_zone.append(num)
+    ordered_num_zone = sorted(num_zone)
+    max_zone = zone_dic[ordered_num_zone[-1]]
+    return max_zone
+
+reg_info = u'平台类型:银行,平台代码:GEO_0000002633,注册时间:2016-08-12 06:59:57平台类型:非银行,平台代码:GEO_0000184968,注册时间:2016-08-12 06:59:57平台类型:银行,平台代码:GEO_0000001806,注册时间:2016-08-12 06:59:57平台类型:银行,平台代码:GEO_0000000685,注册时间:2016-08-12 06:59:57'
+app_info = u'平台类型:银行,平台代码:GEO_0000001806,申请时间:2016-08-12 06:59:57,申请金额区间:0W～0.2W平台类型:银行,平台代码:GEO_0000002633,申请时间:2016-08-12 06:59:57,申请金额区间:0.5W～1W平台类型:银行,平台代码:GEO_0000000685,申请时间:2016-08-12 06:59:57,申请金额区间:10W以上平台类型:非银行,平台代码:GEO_0000184968,申请时间:2016-08-12 06:59:57,申请金额区间:3W～5W'
+loan_info = u'平台类型:银行,平台代码:GEO_0000001806,放款时间:2016-08-12 06:59:57,放款金额区间:0.2W～0.5W平台类型:非银行,平台代码:GEO_0000184968,放款时间:2016-08-12 06:59:57,放款金额区间:0.2W～0.5W平台类型:银行,平台代码:GEO_0000000685,放款时间:2016-08-12 06:59:57,放款金额区间:0.2W～0.5W平台类型:银行,平台代码:GEO_0000002633,放款时间:2016-08-12 06:59:57,放款金额区间:0.2W～0.5W'
+rej_info = u'平台类型:非银行,平台代码:GEO_0000001668,驳回时间:2017-01-30 12:10:01平台类型:非银行,平台代码:GEO_0000001668,驳回时间:2017-03-08 11:20:00'
+
+#注册统计
+reg = len(re.findall(u'平台类型',reg_info))
+reg_Bank = len(re.findall(u'平台类型:银行',reg_info))
+reg_NoBank = len(re.findall(u'平台类型:非银行',reg_info))
+
+#申请统计
+app = len(re.findall(u'平台类型', app_info))
+app_Bank = len(re.findall(u'平台类型:银行', app_info))
+app_NoBank = len(re.findall(u'平台类型:非银行', app_info))
+appMount_0t2k = len(re.findall(u'0W～0.2W', app_info))
+appMount_2t5k = len(re.findall(u'0.2W～0.5W', app_info))
+appMount_5t10k = len(re.findall(u'0.5W～1W', app_info))
+appMount_10t30k = len(re.findall(u'1W～3W', app_info))
+appMount_30t50k = len(re.findall(u'3W～5W', app_info))
+appMount_50t100k = len(re.findall(u'5W～10W', app_info))
+appMount_100kt = len(re.findall(u'10W以上', app_info))
+
+app_Mount = re.findall('\d*\.*\d*[W][～]\d*\.*\d*[W]|10W以上', app_info)
+max_app_zone = max_mount(app_Mount)
+
+#放款统计
+loan = len(re.findall(u'平台类型', loan_info))
+loan_Bank = len(re.findall(u'平台类型:银行', loan_info))
+loan_NoBank = len(re.findall(u'平台类型:非银行', loan_info))
+loanMount_0t2k = len(re.findall(u'0W～0.2W', loan_info))
+loanMount_2t5k = len(re.findall(u'0.2W～0.5W', loan_info))
+loanMount_5t10k = len(re.findall(u'0.5W～1W', loan_info))
+loanMount_10t30k = len(re.findall(u'1W～3W', loan_info))
+loanMount_30t50k = len(re.findall(u'3W～5W', loan_info))
+loanMount_50t100k = len(re.findall(u'5W～10W', loan_info))
+loanMount_100kt = len(re.findall(u'10W以上', loan_info))
+
+loan_Mount = re.findall('\d*\.*\d*[W][～]\d*\.*\d*[W]|10W以上', loan_info)
+max_loan_zone = max_mount(loan_Mount)
+
+#驳回统计
+rej = len(re.findall(u'平台类型',rej_info))
+rej_Bank = len(re.findall(u'平台类型:银行',rej_info))
+rej_NoBank = len(re.findall(u'平台类型:非银行',rej_info))
